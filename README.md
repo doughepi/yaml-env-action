@@ -213,7 +213,7 @@ Since the packaged index.js is run from the dist folder.
 git add dist
 ```
 
-Users shouldn't consume the action from master since that would be latest code and actions can break compatibility between major versions.
+Users shouldn't consume the action from main since that would be latest code and actions can break compatibility between major versions.
 
 Checkin to the v1 release branch
 
@@ -228,7 +228,7 @@ git push origin v1
 
 Note: We recommend using the `--license` option for ncc, which will create a license file for all of the production node modules used in your project.
 
-Your action is now published! :rocket:
+Create a pull request to main. Once the pull request is completed, an administrator can create a release tag.
 
 See the [versioning documentation](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
 
