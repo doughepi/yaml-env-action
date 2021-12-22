@@ -1,24 +1,213 @@
-const wait = require('./wait');
-const process = require('process');
-const cp = require('child_process');
-const path = require('path');
+const index = require('./index');
 
-test('throws invalid number', async () => {
-  await expect(wait('foo')).rejects.toThrow('milliseconds not a number');
-});
+describe("Split Files Tests", () => {
 
-test('wait 500 ms', async () => {
-  const start = new Date();
-  await wait(500);
-  const end = new Date();
-  var delta = Math.abs(end - start);
-  expect(delta).toBeGreaterThanOrEqual(500);
-});
+    test('Two files in string should return array of two', async () => {
+        const files = 'file1.yml file2.yml';
+        const result = await index.splitFiles(files);
+        expect(result).toEqual(['file1.yml', 'file2.yml']);
+    })
 
-// shows how the runner will run a javascript action with env / stdout protocol
-test('test runs', () => {
-  process.env['INPUT_MILLISECONDS'] = 100;
-  const ip = path.join(__dirname, 'index.js');
-  const result = cp.execSync(`node ${ip}`, {env: process.env}).toString();
-  console.log(result);
+    test('One file in string should return array of one', async () => {
+        const files = 'file1.yml';
+        const result = await index.splitFiles(files);
+        expect(result).toEqual(['file1.yml']);
+    })
+
+    test('Empty string should return empty array', async () => {
+        const files = '';
+        const result = await index.splitFiles(files);
+        expect(result).toEqual([]);
+    })
+
+    test('Null should return empty array', async () => {
+        const files = null;
+        const result = await index.splitFiles(files);
+        expect(result).toEqual([]);
+    })
+
+    test('Undefined should return empty array', async () => {
+        const files = undefined;
+        const result = await index.splitFiles(files);
+        expect(result).toEqual([]);
+    })
+
+})
+
+describe("File Extension Tests", () => {
+
+    test('.txt extension should fail', async () => {
+        expect(await index.verifyExtension('test.txt')).toBe(false);
+    })
+
+    test('.yml extension should pass', async () => {
+        expect(await index.verifyExtension('test.yml')).toBe(true);
+    })
+
+    test('.yaml extension should pass', async () => {
+        expect(await index.verifyExtension('test.yaml')).toBe(true);
+    })
+
+    test('No extension should fail', async () => {
+        expect(await index.verifyExtension('test')).toBe(false);
+    })
+
+    test('Empty string should fail', async () => {
+        expect(await index.verifyExtension('')).toBe(false);
+    })
+
+    test('Null should fail', async () => {
+        expect(await index.verifyExtension(null)).toBe(false);
+    })
+
+    test('Undefined should fail', async () => {
+        expect(await index.verifyExtension(undefined)).toBe(false);
+    })
+
+    test('Empty array should fail', async () => {
+        expect(await index.verifyExtension([])).toBe(false);
+    })
+
+    test('Array should fail', async () => {
+        expect(await index.verifyExtension(['test'])).toBe(false);
+    })
+
+    test('Object should fail', async () => {
+        expect(await index.verifyExtension({})).toBe(false);
+    })
+
+    test('Number should fail', async () => {
+        expect(await index.verifyExtension(1)).toBe(false);
+    })
+
+    test('Boolean should fail', async () => {
+        expect(await index.verifyExtension(true)).toBe(false);
+    })
+
+    test('Function should fail', async () => {
+        expect(await index.verifyExtension(() => {
+        })).toBe(false);
+    })
+})
+
+describe('Test Get Environment', () => {
+
+    test('Single dict should be flattened and title cased', async () => {
+        const result = await index.getEnvironment(
+            [
+                {
+                    'test': 'test'
+                }
+            ]
+        );
+        expect(result).toEqual({
+            'TEST': 'test'
+        });
+    })
+
+    test('Two dicts should be flattened and title cased with the second dict overriding', async () => {
+        const result = await index.getEnvironment(
+            [
+                {
+                    'test': 'test'
+                },
+                {
+                    'test': 'test2'
+                }
+            ]
+        );
+        expect(result).toEqual({
+            'TEST': 'test2',
+        });
+    })
+
+    test('Complex case multiple dicts with override and extra values', async () => {
+        const result = await index.getEnvironment(
+            [
+                {
+                    'test': 'test',
+                    'testTwo': 'test2'
+                },
+                {
+                    'test': 'test2',
+                    'testThree': 'test3'
+                },
+                {
+                    'testFour': 'test4',
+                }
+            ]
+        );
+        expect(result).toEqual({
+            'TEST': 'test2',
+            'TEST_TWO': 'test2',
+            'TEST_THREE': 'test3',
+            "TEST_FOUR": "test4"
+        });
+    })
+
+    test('Hyphen should work become constant-case', async () => {
+        const result = await index.getEnvironment(
+            [
+                {
+                    'test-test': 'test'
+                }
+            ]
+        );
+        expect(result).toEqual({
+            'TEST_TEST': 'test'
+        });
+    })
+
+    test('Nested objects should merge properly', async () => {
+        const result = await index.getEnvironment(
+            [
+                {
+                    "name": "application",
+                    "terraform": {
+                        "bucket": "f46cc6e2-86e3-428d-b266-612d7913ef2d"
+                    }
+                },
+                {
+                    "webService": {
+                        "dns": "my-d.webservice.com"
+                    },
+                    "apiService": {
+                        "dns": "my-d.apiservice.com"
+                    },
+                    "name": "application-dev",
+                }
+            ]
+        );
+        expect(result).toEqual({
+            "NAME": "application-dev",
+            "TERRAFORM_BUCKET": "f46cc6e2-86e3-428d-b266-612d7913ef2d",
+            "WEB_SERVICE_DNS": "my-d.webservice.com",
+            "API_SERVICE_DNS": "my-d.apiservice.com"
+        });
+    })
+
+    test('Underscore should work become constant-case', async () => {
+        const result = await index.getEnvironment(
+            [
+                {
+                    'test_test': 'test'
+                }
+            ]
+        );
+        expect(result).toEqual({
+            'TEST_TEST': 'test'
+        });
+    })
+
+    test('Empty object should return empty object', async () => {
+        const result = await index.getEnvironment(
+            [
+                {}
+            ]
+        );
+        expect(result).toEqual({});
+    })
+
+
+
 })

@@ -1,13 +1,9 @@
-name: 'Wait'
-description: 'Wait a designated number of milliseconds'
+name: YAML Environment Action
+description: A custom action for setting GitHub Workflow environment variables with YAML configuration files. 
 inputs:
-  milliseconds:  # id of input
-    description: 'number of milliseconds to wait'
+  files:
+    description: Path to the configuration files to use for the GitHub Workflow environment.
     required: true
-    default: '1000'
-outputs:
-  time: # output will be available to future steps
-    description: 'The current time after waiting'
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/index.js'
