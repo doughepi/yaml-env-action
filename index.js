@@ -13,9 +13,10 @@ const VALID_EXTENSIONS = /(\.yml|\.yaml)$/i
 const ENV_DELIMETER = '_';
 
 /**
+ * Check for the existence of a file.
  * 
- * @param {string} path 
- * @returns 
+ * @param {string} path The path to the file.
+ * @returns True if the file exists, false otherwise.
  */
 const fileExists = async path => !!(await fs.promises.stat(path).catch(e => false));
 
@@ -35,9 +36,10 @@ const splitFiles = async str => {
 }
 
 /**
+ * Verify that the file extension is one of .yaml or .yml.
  * 
- * @param {string} file 
- * @returns 
+ * @param {string} file The path to the file.
+ * @returns True if the file extension is valid, false otherwise.
  */
 const verifyExtension = async file => VALID_EXTENSIONS.test(file);
 
@@ -59,8 +61,8 @@ const verifyExtension = async file => VALID_EXTENSIONS.test(file);
  * Result:
  * - { NAME: 'application-dev', BUCKET: 'f46cc6e2-86e3-428d-b266-612d7913ef2d', WEB_SERVICE_DNS: 'my-d.webservice.com', API_SERVICE_DNS: 'my-d.apiservice.com' }
  * 
- * @param {Object[]} objs 
- * @returns 
+ * @param {Object[]} objs A list of objects to merge.
+ * @returns The merged object.
  */
 const getEnvironment = async objs => {
     if (!Array.isArray(objs)) {
@@ -69,7 +71,11 @@ const getEnvironment = async objs => {
 
     let environment = {}
     objs.forEach((obj) => {
-        environment = deepmerge(environment, obj, { arrayMerge: (_destinationArray, sourceArray) => sourceArray });
+        environment = deepmerge(environment, obj, {
+            arrayMerge: (_destinationArray, sourceArray) => {
+                return sourceArray
+            }
+        });
     })
 
     environment = flatten(environment, {
@@ -81,29 +87,44 @@ const getEnvironment = async objs => {
 };
 
 /**
- * 
+ * Run the action process by reading the files, merging them into a single environment, and then setting the environment variables.
  */
 const run = async () => {
     try {
         const rawFileNames = core.getInput(FILES_INPUT_NAME);
+        core.debug(`Files: ${rawFileNames}`);
+
+        const splitFileNames = await splitFiles(rawFileNames);
+        core.debug(`Split files: ${splitFileNames}`);
 
         const environments = [];
-        const splitFileNames = await splitFiles(rawFileNames);
         for (let fileName in splitFileNames) {
+            core.debug(`Processing file: ${fileName}`);
 
             let isValidExtension = verifyExtension(fileName);
+            core.debug(`File extension for file ${fileName} is valid: ${isValidExtension}`);
+
             let exists = await fileExists(fileName);
+            core.debug(`File ${fileName} exists: ${exists}`);
 
             if (isValidExtension && exists) {
+                core.debug(`Loading file ${fileName}`);
+
                 let fileEnvironment = yaml.parse(fs.readFileSync(fileName, 'utf8'));
+                core.debug(`File coneent: ${JSON.stringify(fileEnvironment)}`);
+
                 environments.push(fileEnvironment);
             }
         }
 
+        core.debug(`Successfuly loaded ${environments.length} files`);
+        core.debug(`Now merging ${environments.length} files`);
+
         const resultingEnvironment = getEnvironment(environments);
-        
+
         Object.keys(resultingEnvironment).forEach(key => {
             core.exportVariable(key, resultingEnvironment[key]);
+            core.info(`Set environment variable ${key} to ${resultingEnvironment[key]}`);
         });
     } catch (error) {
         core.setFailed(error.message);
