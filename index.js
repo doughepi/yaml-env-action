@@ -27,11 +27,6 @@ const fileExists = async path => !!(await fs.promises.stat(path).catch(e => fals
  * @returns An array of strings that represent the indvidiual files.
  */
 const splitFiles = async str => {
-
-    if (str === null || str === undefined || str === '') {
-        return [];
-    }
-
     return str.split(SPLIT_CHARACTER);
 }
 
@@ -107,14 +102,18 @@ const run = async () => {
             let exists = await fileExists(fileName);
             core.debug(`File ${fileName} exists: ${exists}`);
 
-            if (isValidExtension && exists) {
-                core.debug(`Loading file ${fileName}`);
-
-                let fileEnvironment = yaml.parse(fs.readFileSync(fileName, 'utf8'));
-                core.debug(`File coneent: ${JSON.stringify(fileEnvironment)}`);
-
-                environments.push(fileEnvironment);
+            if (!isValidExtension) {
+                throw Error(`File is not an extension like: ${VALID_EXTENSIONS}`)
             }
+            if (!exists) {
+                throw Error(`File does not exist: ${fileName}`)
+            }
+
+            core.debug(`Loading file ${fileName}`);
+            let fileEnvironment = yaml.parse(fs.readFileSync(fileName, 'utf8'));
+            core.debug(`File content: ${JSON.stringify(fileEnvironment)}`);
+
+            environments.push(fileEnvironment);
         }
 
         core.debug(`Successfuly loaded ${environments.length} files`);
@@ -127,7 +126,7 @@ const run = async () => {
             core.info(`Set environment variable ${key} to ${resultingEnvironment[key]}`);
         });
     } catch (error) {
-        core.setFailed(error.message);
+        core.setFailed(error);
     }
 };
 

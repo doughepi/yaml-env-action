@@ -20,5 +20,5 @@ jobs:
     - run: npm ci
     - uses: ./
       with:
-        files: ./example-env/simple/env.yaml
+        files: example-env/simple/env.yaml
     - run: echo "${{ env.WEBSERVER_URL }}"
