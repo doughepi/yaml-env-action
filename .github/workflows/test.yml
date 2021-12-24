@@ -13,7 +13,7 @@ jobs:
     - run: npm ci
     - run: npm test
 
-  simple-test:
+  simple-integration-test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -21,4 +21,10 @@ jobs:
     - uses: ./
       with:
         files: example-env/simple/env.yaml
-    - run: echo "${{ env.WEBSERVER_URL }}"
+    - name: Check action returns correct value for environment variable
+      run: |
+      if [[ $var =~ "www.example.com" ]]; then
+        echo "Pass"
+      else
+          echo "Test failed: output was not 'www.example.com'"
+      fi

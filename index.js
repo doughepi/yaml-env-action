@@ -26,7 +26,6 @@ const fileExists = async path => !!(await fs.promises.stat(path).catch(e => fals
  * @returns An array of strings that represent the indvidiual files.
  */
 const splitFiles = async str => {
-
     // Return empty array if null, undefined, or empty string.
     if (!str || str === undefined || str === null) {
         return [];
@@ -114,7 +113,7 @@ const run = async () => {
 
         Object.keys(resultingEnvironment).forEach(key => {
             core.exportVariable(key, resultingEnvironment[key]);
-            core.info(`Set environment variable ${key} to ${resultingEnvironment[key]}`);
+            core.info(`export ${key}=${resultingEnvironment[key]}`);
         });
     } catch (error) {
         core.setFailed(error);

@@ -15,14 +15,38 @@ take multiple YAML files input that override eachother, allowing for multi-envir
 
 ## Usage
 
+With configuration file in the root directory of your project
+```yaml
+# env.yaml
+name: Example Config
+webserver:
+  url: www.example.com
+```
+
+And the following added to your GitHub Workflow
+
 ```yaml
 - name: Load environment from YAML
   uses: doughepi/yaml-env-action
   with:
-    files: env1.yaml env2.yaml # Pass a space-separated list of configuration files. Rightmost files take precedence.
+    files: env1.yaml # Pass a space-separated list of configuration files. Rightmost files take precedence.
 ```
 
-## Simple Example
+Access the newly exported environment variable in the following steps of your GitHub Workflow.
+
+```yaml
+...
+    steps:
+    - uses: actions/checkout@v2
+    - name: Load environment from YAML
+      uses: doughepi/yaml-env-action
+      with:
+        files: env1.yaml # Pass a space-separated list of configuration files. Rightmost files take precedence.
+    - run: echo "${{ env.WEBSERVER_URL }}"
+...
+```
+
+## Another Example
 
 A simple example...
 
@@ -195,42 +219,35 @@ You end up with the following environment variables.
 * `API_SERVICE_DNS=my-d.apiservice.com`
 
 
-### Releasing
+### Contributing
 
-GitHub Actions will run the entry point from the action.yml. Packaging assembles the code into one file that can be checked in to Git, enabling fast and reliable execution and preventing the need to check in node_modules.
+All contributions are welcome. Create an issue for questions, bugs, and features. Feel free to submit pull requests, as well. The overall development process is detailed below.
 
-Actions are run from GitHub repos.  Packaging the action will create a packaged action in the dist folder.
+#### Development Process
 
-Run prepare
+Create a development branch to make your changes within.
+
+Get the `node_modules/`
+
+```bash
+npm install
+```
+
+On your branch, you can make changes and push. The `test.yml` GitHub Workflow on this repository will kick off on each push, running simple unit and integration tests. Take a look at `test.yml` for more info on how this works. Feel free to add additional integration tests to verify your changes result in correct operation of the `yaml-env-action`.
+
+You can also run the unit tests locally.
+
+```bash
+npm test
+```
+
+Before you create a pull request, you'll need to make sure the `dist/` folder is fully up to date with your changes.
 
 ```bash
 npm run prepare
 ```
 
-Since the packaged index.js is run from the dist folder.
-
-```bash
-git add dist
-```
-
-Users shouldn't consume the action from main since that would be latest code and actions can break compatibility between major versions.
-
-Checkin to the v1 release branch
-
-```bash
-git checkout -b v1
-git commit -a -m "v1 release"
-```
-
-```bash
-git push origin v1
-```
-
-Note: We recommend using the `--license` option for ncc, which will create a license file for all of the production node modules used in your project.
-
-Create a pull request to main. Once the pull request is completed, an administrator can create a release tag.
-
-See the [versioning documentation](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
+Releases will be handled by @doughepi using tags and releases on the `main` branch.
 
 <p align="center">&mdash; ⭐️ &mdash;</p>
 <p align="center"><i>yaml-env-action is <a href="https://github.com/doughepi/yaml-env-action/blob/main/LICENSE">MIT licensed</a> code. Designed & built in Minneapolis, MN. Used at General Mills.</i></p>

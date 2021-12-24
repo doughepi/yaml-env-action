@@ -15,7 +15,6 @@ const { env } = __nccwpck_require__(1765);
 
 const FILES_INPUT_NAME = "files";
 const SPLIT_CHARACTER = " ";
-const VALID_EXTENSIONS = (/* unused pure expression or super */ null && (['.yaml', '.yml']))
 const ENV_DELIMETER = '_';
 
 /**
@@ -33,6 +32,11 @@ const fileExists = async path => !!(await fs.promises.stat(path).catch(e => fals
  * @returns An array of strings that represent the indvidiual files.
  */
 const splitFiles = async str => {
+    // Return empty array if null, undefined, or empty string.
+    if (!str || str === undefined || str === null) {
+        return [];
+    }
+
     return str.split(SPLIT_CHARACTER);
 }
 
@@ -115,7 +119,7 @@ const run = async () => {
 
         Object.keys(resultingEnvironment).forEach(key => {
             core.exportVariable(key, resultingEnvironment[key]);
-            core.info(`Set environment variable ${key} to ${resultingEnvironment[key]}`);
+            core.info(`export ${key}=${resultingEnvironment[key]}`);
         });
     } catch (error) {
         core.setFailed(error);
