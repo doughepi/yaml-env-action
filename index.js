@@ -101,7 +101,7 @@ const run = async () => {
         for (let fileName in splitFileNames) {
             core.debug(`Processing file: ${fileName}`);
 
-            let isValidExtension = verifyExtension(fileName);
+            let isValidExtension = await verifyExtension(fileName);
             core.debug(`File extension for file ${fileName} is valid: ${isValidExtension}`);
 
             let exists = await fileExists(fileName);
@@ -120,7 +120,7 @@ const run = async () => {
         core.debug(`Successfuly loaded ${environments.length} files`);
         core.debug(`Now merging ${environments.length} files`);
 
-        const resultingEnvironment = getEnvironment(environments);
+        const resultingEnvironment = await getEnvironment(environments);
 
         Object.keys(resultingEnvironment).forEach(key => {
             core.exportVariable(key, resultingEnvironment[key]);
