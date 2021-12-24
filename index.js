@@ -9,7 +9,6 @@ const { env } = require('process');
 
 const FILES_INPUT_NAME = "files";
 const SPLIT_CHARACTER = " ";
-const VALID_EXTENSIONS = ['.yaml', '.yml']
 const ENV_DELIMETER = '_';
 
 /**
@@ -27,6 +26,12 @@ const fileExists = async path => !!(await fs.promises.stat(path).catch(e => fals
  * @returns An array of strings that represent the indvidiual files.
  */
 const splitFiles = async str => {
+
+    // Return empty array if null, undefined, or empty string.
+    if (!str || str === undefined || str === null) {
+        return [];
+    }
+
     return str.split(SPLIT_CHARACTER);
 }
 

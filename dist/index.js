@@ -15,7 +15,7 @@ const { env } = __nccwpck_require__(1765);
 
 const FILES_INPUT_NAME = "files";
 const SPLIT_CHARACTER = " ";
-const VALID_EXTENSIONS = /(\.yml|\.yaml)$/i
+const VALID_EXTENSIONS = (/* unused pure expression or super */ null && (['.yaml', '.yml']))
 const ENV_DELIMETER = '_';
 
 /**
@@ -33,21 +33,8 @@ const fileExists = async path => !!(await fs.promises.stat(path).catch(e => fals
  * @returns An array of strings that represent the indvidiual files.
  */
 const splitFiles = async str => {
-
-    if (str === null || str === undefined || str === '') {
-        return [];
-    }
-
     return str.split(SPLIT_CHARACTER);
 }
-
-/**
- * Verify that the file extension is one of .yaml or .yml.
- * 
- * @param {string} file The path to the file.
- * @returns True if the file extension is valid, false otherwise.
- */
-const verifyExtension = async file => VALID_EXTENSIONS.test(file);
 
 /**
  * Take a list of objects and merge them into a single object, taking the last value for each key. After merging, 
@@ -104,36 +91,34 @@ const run = async () => {
         core.debug(`Split files: ${splitFileNames}`);
 
         const environments = [];
-        for (let fileName in splitFileNames) {
+        for (let fileName of splitFileNames) {
             core.debug(`Processing file: ${fileName}`);
-
-            let isValidExtension = verifyExtension(fileName);
-            core.debug(`File extension for file ${fileName} is valid: ${isValidExtension}`);
 
             let exists = await fileExists(fileName);
             core.debug(`File ${fileName} exists: ${exists}`);
 
-            if (isValidExtension && exists) {
-                core.debug(`Loading file ${fileName}`);
-
-                let fileEnvironment = yaml.parse(fs.readFileSync(fileName, 'utf8'));
-                core.debug(`File coneent: ${JSON.stringify(fileEnvironment)}`);
-
-                environments.push(fileEnvironment);
+            if (!exists) {
+                throw Error(`File does not exist: ${fileName}`)
             }
+
+            core.debug(`Loading file ${fileName}`);
+            let fileEnvironment = yaml.parse(fs.readFileSync(fileName, 'utf8'));
+            core.debug(`File content: ${JSON.stringify(fileEnvironment)}`);
+
+            environments.push(fileEnvironment);
         }
 
         core.debug(`Successfuly loaded ${environments.length} files`);
         core.debug(`Now merging ${environments.length} files`);
 
-        const resultingEnvironment = getEnvironment(environments);
+        const resultingEnvironment = await getEnvironment(environments);
 
         Object.keys(resultingEnvironment).forEach(key => {
             core.exportVariable(key, resultingEnvironment[key]);
             core.info(`Set environment variable ${key} to ${resultingEnvironment[key]}`);
         });
     } catch (error) {
-        core.setFailed(error.message);
+        core.setFailed(error);
     }
 };
 
@@ -141,7 +126,6 @@ run()
 
 module.exports = {
     splitFiles,
-    verifyExtension,
     getEnvironment
 }
 
