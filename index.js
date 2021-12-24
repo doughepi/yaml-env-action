@@ -85,7 +85,7 @@ const run = async () => {
         core.debug(`Split files: ${splitFileNames}`);
 
         const environments = [];
-        for (let fileName in splitFileNames) {
+        splitFileNames.forEach(fileName => {
             core.debug(`Processing file: ${fileName}`);
 
             let exists = await fileExists(fileName);
@@ -100,7 +100,7 @@ const run = async () => {
             core.debug(`File content: ${JSON.stringify(fileEnvironment)}`);
 
             environments.push(fileEnvironment);
-        }
+        })
 
         core.debug(`Successfuly loaded ${environments.length} files`);
         core.debug(`Now merging ${environments.length} files`);
