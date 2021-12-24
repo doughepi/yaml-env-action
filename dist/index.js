@@ -15,13 +15,13 @@ const { env } = __nccwpck_require__(1765);
 
 const FILES_INPUT_NAME = "files";
 const SPLIT_CHARACTER = " ";
-const VALID_EXTENSIONS = /(\.yml|\.yaml)$/i
 const ENV_DELIMETER = '_';
 
 /**
+ * Check for the existence of a file.
  * 
- * @param {string} path 
- * @returns 
+ * @param {string} path The path to the file.
+ * @returns True if the file exists, false otherwise.
  */
 const fileExists = async path => !!(await fs.promises.stat(path).catch(e => false));
 
@@ -32,20 +32,13 @@ const fileExists = async path => !!(await fs.promises.stat(path).catch(e => fals
  * @returns An array of strings that represent the indvidiual files.
  */
 const splitFiles = async str => {
-
-    if (str === null || str === undefined || str === '') {
+    // Return empty array if null, undefined, or empty string.
+    if (!str || str === undefined || str === null) {
         return [];
     }
 
     return str.split(SPLIT_CHARACTER);
 }
-
-/**
- * 
- * @param {string} file 
- * @returns 
- */
-const verifyExtension = async file => VALID_EXTENSIONS.test(file);
 
 /**
  * Take a list of objects and merge them into a single object, taking the last value for each key. After merging, 
@@ -65,8 +58,8 @@ const verifyExtension = async file => VALID_EXTENSIONS.test(file);
  * Result:
  * - { NAME: 'application-dev', BUCKET: 'f46cc6e2-86e3-428d-b266-612d7913ef2d', WEB_SERVICE_DNS: 'my-d.webservice.com', API_SERVICE_DNS: 'my-d.apiservice.com' }
  * 
- * @param {Object[]} objs 
- * @returns 
+ * @param {Object[]} objs A list of objects to merge.
+ * @returns The merged object.
  */
 const getEnvironment = async objs => {
     if (!Array.isArray(objs)) {
@@ -75,7 +68,11 @@ const getEnvironment = async objs => {
 
     let environment = {}
     objs.forEach((obj) => {
-        environment = deepmerge(environment, obj, { arrayMerge: (_destinationArray, sourceArray) => sourceArray });
+        environment = deepmerge(environment, obj, {
+            arrayMerge: (_destinationArray, sourceArray) => {
+                return sourceArray
+            }
+        });
     })
 
     environment = flatten(environment, {
@@ -87,32 +84,45 @@ const getEnvironment = async objs => {
 };
 
 /**
- * 
+ * Run the action process by reading the files, merging them into a single environment, and then setting the environment variables.
  */
 const run = async () => {
     try {
         const rawFileNames = core.getInput(FILES_INPUT_NAME);
+        core.debug(`Files: ${rawFileNames}`);
+
+        const splitFileNames = await splitFiles(rawFileNames);
+        core.debug(`Split files: ${splitFileNames}`);
 
         const environments = [];
-        const splitFileNames = await splitFiles(rawFileNames);
-        for (let fileName in splitFileNames) {
+        for (let fileName of splitFileNames) {
+            core.debug(`Processing file: ${fileName}`);
 
-            let isValidExtension = verifyExtension(fileName);
             let exists = await fileExists(fileName);
+            core.debug(`File ${fileName} exists: ${exists}`);
 
-            if (isValidExtension && exists) {
-                let fileEnvironment = yaml.parse(fs.readFileSync(fileName, 'utf8'));
-                environments.push(fileEnvironment);
+            if (!exists) {
+                throw Error(`File does not exist: ${fileName}`)
             }
+
+            core.debug(`Loading file ${fileName}`);
+            let fileEnvironment = yaml.parse(fs.readFileSync(fileName, 'utf8'));
+            core.debug(`File content: ${JSON.stringify(fileEnvironment)}`);
+
+            environments.push(fileEnvironment);
         }
 
-        const resultingEnvironment = getEnvironment(environments);
-        
+        core.debug(`Successfuly loaded ${environments.length} files`);
+        core.debug(`Now merging ${environments.length} files`);
+
+        const resultingEnvironment = await getEnvironment(environments);
+
         Object.keys(resultingEnvironment).forEach(key => {
             core.exportVariable(key, resultingEnvironment[key]);
+            core.info(`export ${key}=${resultingEnvironment[key]}`);
         });
     } catch (error) {
-        core.setFailed(error.message);
+        core.setFailed(error);
     }
 };
 
@@ -120,7 +130,6 @@ run()
 
 module.exports = {
     splitFiles,
-    verifyExtension,
     getEnvironment
 }
 

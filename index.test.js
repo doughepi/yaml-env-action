@@ -34,62 +34,6 @@ describe("Split Files Tests", () => {
 
 })
 
-describe("File Extension Tests", () => {
-
-    test('.txt extension should fail', async () => {
-        expect(await index.verifyExtension('test.txt')).toBe(false);
-    })
-
-    test('.yml extension should pass', async () => {
-        expect(await index.verifyExtension('test.yml')).toBe(true);
-    })
-
-    test('.yaml extension should pass', async () => {
-        expect(await index.verifyExtension('test.yaml')).toBe(true);
-    })
-
-    test('No extension should fail', async () => {
-        expect(await index.verifyExtension('test')).toBe(false);
-    })
-
-    test('Empty string should fail', async () => {
-        expect(await index.verifyExtension('')).toBe(false);
-    })
-
-    test('Null should fail', async () => {
-        expect(await index.verifyExtension(null)).toBe(false);
-    })
-
-    test('Undefined should fail', async () => {
-        expect(await index.verifyExtension(undefined)).toBe(false);
-    })
-
-    test('Empty array should fail', async () => {
-        expect(await index.verifyExtension([])).toBe(false);
-    })
-
-    test('Array should fail', async () => {
-        expect(await index.verifyExtension(['test'])).toBe(false);
-    })
-
-    test('Object should fail', async () => {
-        expect(await index.verifyExtension({})).toBe(false);
-    })
-
-    test('Number should fail', async () => {
-        expect(await index.verifyExtension(1)).toBe(false);
-    })
-
-    test('Boolean should fail', async () => {
-        expect(await index.verifyExtension(true)).toBe(false);
-    })
-
-    test('Function should fail', async () => {
-        expect(await index.verifyExtension(() => {
-        })).toBe(false);
-    })
-})
-
 describe('Test Get Environment', () => {
 
     test('Single dict should be flattened and title cased', async () => {
