@@ -23,8 +23,9 @@ jobs:
         files: example-env/simple/env.yaml
     - name: Check action returns correct value for environment variable
       run: |
-        if [[ $var =~ "www.example.com" ]]; then
+        if [[ $WEBSERVER_URL =~ "www.example.com" ]]; then
           echo "Pass"
         else
             echo "Test failed: output was not 'www.example.com'"
+            exit 1
         fi
