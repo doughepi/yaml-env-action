@@ -9,7 +9,7 @@ const { env } = require('process');
 
 const FILES_INPUT_NAME = "files";
 const SPLIT_CHARACTER = " ";
-const VALID_EXTENSIONS = /(\.yml|\.yaml)$/i
+const VALID_EXTENSIONS = ['.yaml', '.yml']
 const ENV_DELIMETER = '_';
 
 /**
@@ -29,14 +29,6 @@ const fileExists = async path => !!(await fs.promises.stat(path).catch(e => fals
 const splitFiles = async str => {
     return str.split(SPLIT_CHARACTER);
 }
-
-/**
- * Verify that the file extension is one of .yaml or .yml.
- * 
- * @param {string} file The path to the file.
- * @returns True if the file extension is valid, false otherwise.
- */
-const verifyExtension = async file => VALID_EXTENSIONS.test(file);
 
 /**
  * Take a list of objects and merge them into a single object, taking the last value for each key. After merging, 
@@ -96,15 +88,9 @@ const run = async () => {
         for (let fileName in splitFileNames) {
             core.debug(`Processing file: ${fileName}`);
 
-            let isValidExtension = await verifyExtension(fileName);
-            core.debug(`File extension for file ${fileName} is valid: ${isValidExtension}`);
-
             let exists = await fileExists(fileName);
             core.debug(`File ${fileName} exists: ${exists}`);
-
-            if (!isValidExtension) {
-                throw Error(`File is not an extension like: ${VALID_EXTENSIONS}`)
-            }
+            
             if (!exists) {
                 throw Error(`File does not exist: ${fileName}`)
             }
