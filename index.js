@@ -90,7 +90,7 @@ const run = async () => {
 
             let exists = await fileExists(fileName);
             core.debug(`File ${fileName} exists: ${exists}`);
-            
+
             if (!exists) {
                 throw Error(`File does not exist: ${fileName}`)
             }
@@ -120,6 +120,5 @@ run()
 
 module.exports = {
     splitFiles,
-    verifyExtension,
     getEnvironment
 }
