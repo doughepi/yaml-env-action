@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: npm ci
+    - run: npm ci
     - uses: ./
       with:
         files: example-env/simple/env.yaml
