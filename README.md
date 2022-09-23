@@ -219,6 +219,25 @@ You end up with the following environment variables.
 * `API_SERVICE_DNS=my-d.apiservice.com`
 
 
+### Masking output
+
+If your files contans a sensitive data, you can mask output
+
+```yaml
+...
+- name: Load environment from YAML
+  uses: doughepi/yaml-env-action
+  with:
+    files: env1.yaml
+    mask_output: true
+...
+```
+
+You end up with the following masking variables.
+
+* `NAME=***`
+* `TERRAFORM_BUCKET=***`
+
 ### Contributing
 
 All contributions are welcome. Create an issue for questions, bugs, and features. Feel free to submit pull requests, as well. The overall development process is detailed below.
