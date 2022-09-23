@@ -8,6 +8,7 @@ const deepmerge = require('deepmerge');
 const { env } = require('process');
 
 const FILES_INPUT_NAME = "files";
+const MASK_OUTPUT = "mask_output";
 const SPLIT_CHARACTER = " ";
 const ENV_DELIMETER = '_';
 
@@ -82,6 +83,9 @@ const getEnvironment = async objs => {
  */
 const run = async () => {
     try {
+        const maskOutput = core.getInput(MASK_OUTPUT);
+        core.debug(`maskOutput: ${maskOutput}`);
+        
         const rawFileNames = core.getInput(FILES_INPUT_NAME);
         core.debug(`Files: ${rawFileNames}`);
 
@@ -112,6 +116,9 @@ const run = async () => {
         const resultingEnvironment = await getEnvironment(environments);
 
         Object.keys(resultingEnvironment).forEach(key => {
+            if (maskOutput == "true") {
+                core.setSecret(esultingEnvironment[key]);
+            }    
             core.exportVariable(key, resultingEnvironment[key]);
             core.info(`export ${key}=${resultingEnvironment[key]}`);
         });
